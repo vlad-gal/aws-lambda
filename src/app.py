@@ -8,7 +8,7 @@ SNS_TOPIC_ARN = ssm.get_parameter(Name="sns_topic")["Parameter"]["Value"]
 DNS_NAME = ssm.get_parameter(Name="dns_name")["Parameter"]["Value"]
 
 
-def lambda_handler(event):
+def lambda_handler(event, context):
     for record in event['Records']:
         body = json.loads(record['body'])
         message = (
