@@ -9,6 +9,8 @@ phases:
   build:
     commands:
       - sam build
+      - sam package --s3-bucket 657672949295-aws-bucket1 --output-template-file packaged.yaml
+
 artifacts:
   type: zip
   files:
