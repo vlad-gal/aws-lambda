@@ -9,8 +9,6 @@ phases:
   build:
     commands:
       - sam build
-      - sam package --output-template-file packaged.yaml
-
 artifacts:
   type: zip
   files:
