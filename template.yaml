@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM app for UploadsNotificationFunction (with external SNS/SQS)
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: python3.12
+    Tracing: Active
+    MemorySize: 128
+    Handler: app.lambda_handler
+
+Resources:
+
+  UploadsNotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub UploadsNotificationFunction
+      CodeUri: ./src/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        SQSInvoke:
+          Type: SQS
+          Properties:
+            Queue: !ImportValue UploadsNotificationQueueArn
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaSQSSNSPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !ImportValue UploadsNotificationQueueArn
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !ImportValue UploadsNotificationTopicArn
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ssm:*
+                Resource:
+                  - !Sub arn:aws:ssm:*
+
+Outputs:
+  UploadsNotificationFunctionArn:
+    Description: ARN of the Lambda function
+    Value: !GetAtt UploadsNotificationFunction.Arn
